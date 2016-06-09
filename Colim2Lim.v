@@ -154,11 +154,6 @@ Proof.
 Defined.
 
 
-(*
-  given a limit cocone [X] over [D] and a type [A] we get a limit cone [hom(X,A)]
-  over [hom(D,A)]. i.e. [-,A] maps limits to colimits
-*)
-
 Definition map_to_graph_cone {G : graph} {D : diagram G}
   {X} (C : graph_cone D X) (Y:Type) (f : Y -> X)
 : graph_cone D Y.
@@ -184,7 +179,7 @@ Defined.
 
 
 (* colimit *)
-Definition is_colimit_cone {G : graph} {D : diagram G} {L} (C : graph_cocone D L)
+Definition is_colimit_cocone {G : graph} {D : diagram G} {L} (C : graph_cocone D L)
 := forall (X : Type), IsEquiv (map_to_graph_cocone C X).
 
 
@@ -192,6 +187,59 @@ Definition is_colimit_cone {G : graph} {D : diagram G} {L} (C : graph_cocone D L
   by post composition with the cocone of [C] we have a map
   [(L -> hom(C,A)) -> (L -> CoCone(D,A))]
 *)
-Definition postcompose_with_cone {G : graph} {D : diagram G} {A L : Type} :
-                                 (L -> C -> A) -> (L -> graph_cocone D A).
+Definition postcompose_with_cocone {G : graph} {D : diagram G} {C : Type}
+                                   (c : graph_cocone D C) {A L : Type} :
+                                   (L -> C -> A) -> (L -> graph_cocone D A)
+:= fun f => (map_to_graph_cocone c A) o f. 
+
+
+(* and if [C] is a colimit, then this is an equivalence *)
+Definition isEquiv_postcompose_with_cocone `{Funext}
+                                           {G : graph} {D : diagram G} {C : Type}
+                                           {c : graph_cocone D C} {lc : is_colimit_cocone c}
+                                           {A L : Type} :
+                                           IsEquiv (@postcompose_with_cocone G D C c A L).
 Proof.
+  set (the_equivalence := lc A).
+  exact (isequiv_postcompose (map_to_graph_cocone c A)).
+Defined.
+
+
+(*
+  [map_to_graph_cone] factors through the equivalence [conetococone]
+*)
+Definition map_to_graph_cone_factors_conetococone `{Funext}
+             {G : graph} {D : diagram G} {C : Type}
+             {A : Type} {c : graph_cocone D C} (L : Type) :
+               coconetocone o (postcompose_with_cocone c) =
+                 (map_to_graph_cone (representable_apply_cone C c A) L).
+Proof.
+  refine (path_arrow _ _ _).
+  intro.
+  refine (path_sigma _ _ _ _ _).
+    Unshelve. Focus 2. trivial.
+  refine (path_forall _ _ _). intro.
+  refine (path_forall _ _ _). intro.
+  refine (path_forall _ _ _). intro.
+  refine (path_forall _ _ _). intro.
+  trivial.
+Defined.
+
+
+(*
+  given a *limit* cocone [X] over [D] and a type [A], we get a limit cone [hom(X,A)]
+  over [hom(D,A)]. i.e. [-,A] maps limits to colimits
+*)
+
+Definition homisexact `{Funext}
+           {G : graph} {D : diagram G} {C : Type}
+           (c : graph_cocone D C) (cl : is_colimit_cocone c)
+           (A : Type) : is_limit_cone (representable_apply_cone C c A).
+Proof.
+  intro L.
+  refine (isequiv_homotopic _ _).
+  set (equiv1 := @isEquiv_postcompose_with_cocone _ _ _ _ c A L).
+  set (equiv2 := isEquiv_conetococone).
+  exact (isequiv_compose ( ) ( ).
+    Focus 2. trivial.
+  set (the_equivalence := coconetocone o (postcompose_with_cocone c)).
