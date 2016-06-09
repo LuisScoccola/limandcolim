@@ -104,7 +104,7 @@ Defined.
   there is an equivalence  [(L -> CoCone(D,A)) ~ Cone(hom(D,A),L)]
   given by the following map
 *)
-Definition coconetocone `{Funext} {G : graph} {D : diagram G} {A L : Type} :
+Definition coconetocone `{Funext} {G : graph} (D : diagram G) (A L : Type) :
                           (L -> graph_cocone D A) -> graph_cone (representable_apply_diag D A) L.
 Proof.
   intro.
@@ -117,7 +117,7 @@ Defined.
 
 
 (* we can go back *)
-Definition conetococone {G : graph} {D : diagram G} {A L : Type} :
+Definition conetococone {G : graph} (D : diagram G) (A L : Type) :
                           graph_cone (representable_apply_diag D A) L -> (L -> graph_cocone D A).
 Proof.
   intros X l.
@@ -128,10 +128,10 @@ Defined.
 
 
 (* and this is an equivalence *)
-Definition isEquiv_conetococone `{Funext} {G : graph} {D : diagram G} {A L : Type} :
-                                IsEquiv (@conetococone G D A L).
+Definition isEquiv_conetococone `{Funext} {G : graph} (D : diagram G) (A L : Type) :
+                                IsEquiv (conetococone D A L).
 Proof.
-  refine (isequiv_adjointify conetococone coconetocone _ _).
+  refine (isequiv_adjointify (conetococone D A L) (coconetocone D A L) _ _).
     intro.
     refine (path_arrow _ _ _).
     intro l.
@@ -151,6 +151,31 @@ Proof.
     intro. refine (path_forall _ _ _).
     intro. refine (path_forall _ _ _).
     intro. refine (eta_path_forall _ _ _).
+Defined.
+
+Definition isEquiv_coconetocone `{Funext} {G : graph} (D : diagram G) (A L : Type) :
+                                IsEquiv (coconetocone D A L).
+Proof.
+  refine (isequiv_adjointify (coconetocone D A L) (conetococone D A L) _ _).
+    intro.
+    refine (path_sigma _ _ _ _ _).
+      Unshelve. Focus 3. trivial.
+    refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    intro. refine (eta_path_forall _ _ _).
+ 
+    intro.
+    refine (path_arrow _ _ _).
+    intro l.
+    refine (path_sigma _ _ _ _ _).
+      Unshelve. Focus 2. trivial.
+    refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    intro. refine (path_forall _ _ _).
+    refine (ap10_path_arrow _ _ _).
 Defined.
 
 
@@ -188,7 +213,7 @@ Definition is_colimit_cocone {G : graph} {D : diagram G} {L} (C : graph_cocone D
   [(L -> hom(C,A)) -> (L -> CoCone(D,A))]
 *)
 Definition postcompose_with_cocone {G : graph} {D : diagram G} {C : Type}
-                                   (c : graph_cocone D C) {A L : Type} :
+                                   (c : graph_cocone D C) (A L : Type) :
                                    (L -> C -> A) -> (L -> graph_cocone D A)
 := fun f => (map_to_graph_cocone c A) o f. 
 
@@ -196,9 +221,9 @@ Definition postcompose_with_cocone {G : graph} {D : diagram G} {C : Type}
 (* and if [C] is a colimit, then this is an equivalence *)
 Definition isEquiv_postcompose_with_cocone `{Funext}
                                            {G : graph} {D : diagram G} {C : Type}
-                                           {c : graph_cocone D C} {lc : is_colimit_cocone c}
-                                           {A L : Type} :
-                                           IsEquiv (@postcompose_with_cocone G D C c A L).
+                                           {c : graph_cocone D C} (lc : is_colimit_cocone c)
+                                           (A L : Type) :
+                                           IsEquiv (postcompose_with_cocone c A L).
 Proof.
   set (the_equivalence := lc A).
   exact (isequiv_postcompose (map_to_graph_cocone c A)).
@@ -210,8 +235,8 @@ Defined.
 *)
 Definition map_to_graph_cone_factors_conetococone `{Funext}
              {G : graph} {D : diagram G} {C : Type}
-             {A : Type} {c : graph_cocone D C} (L : Type) :
-               coconetocone o (postcompose_with_cocone c) =
+             (c : graph_cocone D C) (A : Type) (L : Type) :
+               (coconetocone D A L) o (postcompose_with_cocone c A L) =
                  (map_to_graph_cone (representable_apply_cone C c A) L).
 Proof.
   refine (path_arrow _ _ _).
@@ -238,8 +263,7 @@ Definition homisexact `{Funext}
 Proof.
   intro L.
   refine (isequiv_homotopic _ _).
-  set (equiv1 := @isEquiv_postcompose_with_cocone _ _ _ _ c A L).
-  set (equiv2 := isEquiv_conetococone).
-  exact (isequiv_compose ( ) ( ).
-    Focus 2. trivial.
-  set (the_equivalence := coconetocone o (postcompose_with_cocone c)).
+  set (equiv1 := isEquiv_postcompose_with_cocone cl A L).
+  set (equiv2 := isEquiv_coconetocone D A L).
+  refine (isequiv_compose' (postcompose_with_cocone c A L) equiv1 (coconetocone D A L) equiv2 ).
+  exact (map_to_graph_cone_factors_conetococone A c L).
