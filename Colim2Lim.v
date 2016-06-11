@@ -155,8 +155,8 @@ Defined.
 
 
 (*
-  given a *limit* cocone [X] over [D] and a type [A], we get a limit cone [hom(X,A)]
-  over [hom(D,A)]. i.e. hom(-,A) maps limits to colimits
+  given a colimit cocone [X] over [D] and a type [A], we get a limit cone [hom(X,A)]
+  over [hom(D,A)]. i.e. hom(-,A) maps colimits to limits 
 *)
 
 Definition homisexact `{Funext}
@@ -171,4 +171,4 @@ Proof.
   refine (isequiv_compose' (postcompose_with_cocone c A L) equiv1 (coconetocone D A L) equiv2 ).
   intro f.
   exact (happly (map_to_graph_cone_factors_conetococone c A L) f).
- Defined.
+Defined.
